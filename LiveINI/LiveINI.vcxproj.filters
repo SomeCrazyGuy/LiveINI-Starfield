@@ -40,6 +40,9 @@
     <ClCompile Include="minilibs\regexp.c">
       <Filter>Library Files\minilibs\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="font.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h">
@@ -84,6 +87,10 @@
     <ClInclude Include="minilibs\regexp.h">
       <Filter>Library Files\minilibs\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="font.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source Files">
@@ -113,5 +120,8 @@
     <Filter Include="Library Files\minilibs\Source Files">
       <UniqueIdentifier>{2722c61c-6c8f-479b-b251-458ac370441a}</UniqueIdentifier>
     </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="LiveINI Starfield.rc" />
   </ItemGroup>
 </Project>

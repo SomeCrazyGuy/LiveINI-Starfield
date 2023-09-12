@@ -6,6 +6,7 @@
 #include "main.h"
 #include "memory_scan.h"
 #include "process.h"
+#include "font.h"
 
 // Init global data
 extern ProcessInfo GameProcessInfo = {nullptr};
@@ -31,7 +32,7 @@ int WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     //ImGui_ImplWin32_EnableDpiAwareness();
     WNDCLASSEX wc = { sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, "ImGui Example", NULL };
     ::RegisterClassEx(&wc);
-    HWND hwnd = ::CreateWindowA(wc.lpszClassName, "LiveINI Research Tool", WS_OVERLAPPEDWINDOW, 100, 100, 400, 600, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = ::CreateWindowA(wc.lpszClassName, "LiveINI Research Tool", WS_OVERLAPPEDWINDOW, 100, 100, 600, 800, NULL, NULL, wc.hInstance, NULL);
 
     // Initialize Direct3D
     if (!CreateDeviceD3D(hwnd))
@@ -55,6 +56,9 @@ int WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
     //ImGui::StyleColorsClassic();
+
+    //setup fonts
+    io.Fonts->AddFontFromMemoryCompressedTTF(FONT_buffer, FONT_size, 16.f);
 
     // Setup Platform/Renderer backends
     ImGui_ImplWin32_Init(hwnd);
@@ -147,7 +151,6 @@ int WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
                 BAIL_OUT:
                         ;
 		}
-
 
 		if (ImGui::BeginTabBar("main_tab_bar")) {
 			if (ImGui::BeginTabItem("Log")) {
