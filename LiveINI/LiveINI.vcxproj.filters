@@ -1,0 +1,117 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="log_window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="memory_scan.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="process.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="setting.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui\imgui.cpp">
+      <Filter>Library Files\Dear ImGUI\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui\imgui_demo.cpp">
+      <Filter>Library Files\Dear ImGUI\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui\imgui_draw.cpp">
+      <Filter>Library Files\Dear ImGUI\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui\imgui_impl_dx11.cpp">
+      <Filter>Library Files\Dear ImGUI\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui\imgui_impl_win32.cpp">
+      <Filter>Library Files\Dear ImGUI\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui\imgui_tables.cpp">
+      <Filter>Library Files\Dear ImGUI\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui\imgui_widgets.cpp">
+      <Filter>Library Files\Dear ImGUI\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="minilibs\regexp.c">
+      <Filter>Library Files\minilibs\Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="main.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="memory_scan.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="process.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="setting.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\imconfig.h">
+      <Filter>Library Files\Dear ImGUI\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\imgui.h">
+      <Filter>Library Files\Dear ImGUI\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\imgui_impl_dx11.h">
+      <Filter>Library Files\Dear ImGUI\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\imgui_impl_win32.h">
+      <Filter>Library Files\Dear ImGUI\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\imgui_internal.h">
+      <Filter>Library Files\Dear ImGUI\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\imgui_memory_editor.h">
+      <Filter>Library Files\Dear ImGUI\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\imstb_rectpack.h">
+      <Filter>Library Files\Dear ImGUI\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\imstb_textedit.h">
+      <Filter>Library Files\Dear ImGUI\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\imstb_truetype.h">
+      <Filter>Library Files\Dear ImGUI\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="minilibs\regexp.h">
+      <Filter>Library Files\minilibs\Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{f6f8ddc4-2ff5-495b-8825-711f56af07e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Library Files">
+      <UniqueIdentifier>{a31f84fa-bb57-4d74-bca4-5d79e4f2f13a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{e829c8d2-63a6-4f0e-b807-a8954a5113a6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Library Files\Dear ImGUI">
+      <UniqueIdentifier>{debdd0d6-6d2a-47de-9fbc-6826319437f2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Library Files\Dear ImGUI\Header Files">
+      <UniqueIdentifier>{cbcf4664-318e-49da-8398-54bfd75443a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Library Files\Dear ImGUI\Source Files">
+      <UniqueIdentifier>{5799f48b-c0de-4668-a04d-3d966e0b7d5e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Library Files\minilibs">
+      <UniqueIdentifier>{1b9ed507-8e4a-46d6-9b74-3d878024a4e6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Library Files\minilibs\Header Files">
+      <UniqueIdentifier>{089e5281-180c-4f54-9677-d87bdd7c221f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Library Files\minilibs\Source Files">
+      <UniqueIdentifier>{2722c61c-6c8f-479b-b251-458ac370441a}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
