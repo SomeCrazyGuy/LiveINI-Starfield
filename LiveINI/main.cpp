@@ -26,6 +26,59 @@ void CleanupRenderTarget();
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 
+static void ScanStarfield() {
+        MemoryBlock mb;
+
+        if (GameProcessInfo.process) {
+                CloseHandle(GameProcessInfo.process);
+                _aligned_free(GameProcessInfo.buffer);
+                GameProcessInfo.rtti_map.clear();
+        }
+
+        GameProcessInfo.proc_id = GetProcessIdByExeName("Starfield.exe");
+        if (GameProcessInfo.proc_id == 0) {
+                Log("Starfield is not running");
+                goto BAIL_OUT;
+        }
+
+        Log("Process ID: %u", GameProcessInfo.proc_id);
+
+        GameProcessInfo.process = OpenProcess(PROCESS_ALL_ACCESS, FALSE, GameProcessInfo.proc_id);
+        if (!GameProcessInfo.process) {
+                Log("Could not open process");
+                goto BAIL_OUT;
+        }
+
+        mb = GetProcessBlock();
+        if (!mb.address) {
+                Log("Could not analyze process heap");
+                goto BAIL_OUT;
+        }
+
+        GameProcessInfo.buffer_size = mb.size;
+        GameProcessInfo.base_address = mb.address;
+
+        GameProcessInfo.buffer = _aligned_malloc((mb.size | 4095) + 1, 4096);
+        if (!GameProcessInfo.buffer) {
+                Log("Could not allocate memory");
+                goto BAIL_OUT;
+        }
+
+        if (!RPM(GameProcessInfo.process, mb.address, GameProcessInfo.buffer, mb.size)) {
+                Log("Could not read process memory");
+                goto BAIL_OUT;
+        }
+
+        build_rtti_list();
+
+        Log("Starfield process memory read completed");
+
+        scan_vtable();
+BAIL_OUT:
+        ;
+}
+
+
 // Main code
 int WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {	
@@ -101,60 +154,12 @@ int WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 	const auto window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus;
 	if (ImGui::Begin("Window", nullptr, window_flags)) {
-		if (ImGui::SmallButton("Scan Starfield")) {
-                        MemoryBlock mb;
-
-			if (GameProcessInfo.process) {
-				CloseHandle(GameProcessInfo.process);
-				_aligned_free(GameProcessInfo.buffer);
-				GameProcessInfo.rtti_map.clear();
-			}
-				
-			GameProcessInfo.proc_id = GetProcessIdByExeName("Starfield.exe");
-                        if (GameProcessInfo.proc_id == 0) {
-                                Log("Starfield is not running");
-                                goto BAIL_OUT;
-                        }
-
-			Log("Process ID: %u", GameProcessInfo.proc_id);
-
-			GameProcessInfo.process = OpenProcess(PROCESS_ALL_ACCESS, FALSE, GameProcessInfo.proc_id);
-                        if (!GameProcessInfo.process) {
-                                Log("Could not open process");
-                                goto BAIL_OUT;
-                        }
-				
-			mb = GetProcessBlock();
-                        if (!mb.address) {
-                                Log("Could not analyze process heap");
-                                goto BAIL_OUT;
-                        }
-
-			GameProcessInfo.buffer_size = mb.size;
-			GameProcessInfo.base_address = mb.address;
-
-			GameProcessInfo.buffer = _aligned_malloc((mb.size | 4095) + 1, 4096);
-                        if (!GameProcessInfo.buffer) {
-                                Log("Could not allocate memory");
-                                goto BAIL_OUT;
-                        }
-
-                        if (!RPM(GameProcessInfo.process, mb.address, GameProcessInfo.buffer, mb.size)) {
-                                Log("Could not read process memory");
-                                goto BAIL_OUT;
-                        }
-
-			build_rtti_list();
-
-			Log("Starfield process memory read completed");
-
-                        scan_vtable();
-                BAIL_OUT:
-                        ;
-		}
-
 		if (ImGui::BeginTabBar("main_tab_bar")) {
 			if (ImGui::BeginTabItem("Log")) {
+                                if (ImGui::Button("Scan Starfield")) {
+                                        ScanStarfield();
+                                }
+                                ImGui::SameLine();
 				draw_log_window();
 				ImGui::EndTabItem();
 			}
