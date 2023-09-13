@@ -72,6 +72,8 @@ void draw_rtti_window() {
         auto result_count = std::distance(match_begin, match_end);
         ImGui::Text("Results: %d / %d", result_count, rtti.size());
 
+        ImGui::BeginChild("rtti_results_section", ImVec2{}, false, ImGuiWindowFlags_NoScrollbar);
+
         ImGuiListClipper clip{};
         clip.Begin(result_count, ImGui::GetTextLineHeightWithSpacing());
         while (clip.Step()) {
@@ -91,4 +93,5 @@ void draw_rtti_window() {
                         ImGui::PopID();
                 }
         }
+        ImGui::EndChild();
 }

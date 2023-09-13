@@ -167,10 +167,10 @@ int WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 				scan_window_draw();
 				ImGui::EndTabItem();
 			}
-                        if (ImGui::BeginTabItem("RTTI")) {
-                                draw_rtti_window();
-                                ImGui::EndTabItem();
-                        }
+            if (ImGui::BeginTabItem("RTTI")) {
+                draw_rtti_window();
+                ImGui::EndTabItem();
+            }
 			ImGui::EndTabBar();
 		}
 	}
