@@ -7,6 +7,7 @@
 #include "memory_scan.h"
 #include "process.h"
 #include "font.h"
+#include "rtti_window.h"
 
 // Init global data
 extern ProcessInfo GameProcessInfo = {nullptr};
@@ -161,6 +162,10 @@ int WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 				scan_window_draw();
 				ImGui::EndTabItem();
 			}
+                        if (ImGui::BeginTabItem("RTTI")) {
+                                draw_rtti_window();
+                                ImGui::EndTabItem();
+                        }
 			ImGui::EndTabBar();
 		}
 	}

@@ -102,6 +102,7 @@
     <ClCompile Include="memory_scan.cpp" />
     <ClCompile Include="minilibs\regexp.c" />
     <ClCompile Include="process.cpp" />
+    <ClCompile Include="rtti_window.cpp" />
     <ClCompile Include="setting.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -120,6 +121,7 @@
     <ClInclude Include="minilibs\regexp.h" />
     <ClInclude Include="process.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="rtti_window.h" />
     <ClInclude Include="setting.h" />
   </ItemGroup>
   <ItemGroup>

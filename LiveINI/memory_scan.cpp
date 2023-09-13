@@ -21,6 +21,7 @@ public:
 	Pointer(const void* const ptr): m_value {(uintptr_t)ptr} {}
 	Pointer(uintptr_t ptr) : m_value{ ptr } {}
 	template<typename T> T as() const { return (T)m_value; }
+	template<typename T> void set(T* out) { *out = (T*)m_value; }
 	uintptr_t value() const { return m_value; }
 	const Pointer operator+(const Pointer& other) const { return Pointer(m_value + other.m_value); }
 	const Pointer operator-(const Pointer& other) const { return Pointer(m_value - other.m_value); }
