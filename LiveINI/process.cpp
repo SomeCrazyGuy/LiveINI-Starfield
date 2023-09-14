@@ -73,6 +73,8 @@ extern void GetProcessMemoryBlocks(void) {
 
 	GameProcessInfo.blocks.clear();
 
+	Log("Heap analysis");
+
 	static const uintptr_t ADDR_MIN = { 0x000000000000ULL };
 	static const uintptr_t ADDR_MAX = { 0x7FFFFFFFFFFFULL };
 	static const auto NtQueryVirtualMemory = (PNTAPI)GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtQueryVirtualMemory");
@@ -96,7 +98,10 @@ extern void GetProcessMemoryBlocks(void) {
 		blk.flags |= (mbi.Protect & (PAGE_EXECUTE_READ | PAGE_READONLY | PAGE_READWRITE | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY | PAGE_WRITECOPY)) ? MemoryFlag_Read : 0;
 		blk.flags |= (mbi.Protect & (PAGE_WRITECOPY | PAGE_READWRITE | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY)) ? MemoryFlag_Write : 0;
 		blk.flags |= (mbi.Protect & (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY)) ? MemoryFlag_Execute : 0;
-		GameProcessInfo.blocks.push_back(blk);
+		if (blk.flags & MemoryFlag::MemoryFlag_Execute) continue;
+		if (blk.flags * MemoryFlag::MemoryFlag_Write) {
+			GameProcessInfo.blocks.push_back(blk);
+		}
 		Log("Adding Memory Block: %p", address);
 	}
 }

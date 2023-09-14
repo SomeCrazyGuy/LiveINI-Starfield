@@ -64,6 +64,7 @@ static void ScanStarfield() {
                 goto BAIL_OUT;
         }
 
+        GetProcessMemoryBlocks();
         perform_exe_section_analysis();
         perform_exe_version_analysis();
         build_rtti_list();

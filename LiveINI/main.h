@@ -89,7 +89,8 @@ struct ProcessInfo {
 			uint32_t size;
 		}
 		text, rdata, data, rsrc;
-		struct Version {
+
+		struct VersionInfo {
 			unsigned major;
 			unsigned minor;
 			unsigned build;

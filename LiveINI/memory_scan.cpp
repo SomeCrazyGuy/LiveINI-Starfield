@@ -1,6 +1,7 @@
 #include "main.h"
 #include "process.h"
 #include "setting.h"
+#include "aobscan.h"
 
 extern "C" {
 	#include "minilibs/regexp.h"
@@ -476,32 +477,17 @@ extern void scan_window_draw(void) {
 
 
 extern void perform_exe_version_analysis() {
-	const Pointer data{ GameProcessInfo.buffer };
-	
-	const wchar_t* searchtext = L"ProductVersion";
-	const wchar_t* haystack = (const wchar_t*)((char*)(GameProcessInfo.buffer) + GameProcessInfo.exe.rsrc.offset);
-	const auto count = GameProcessInfo.exe.rsrc.size / sizeof(*haystack);
+	// instead of using the windows api for getting the executable version information its actually faster
+	// to brute-force search the .rsrc section of the exe since we already have it in a buffer
 
-	for (auto i = 0; i < count; ++i) {
-		auto match = 0;
-		auto cur = haystack[i];
-		auto cmp = searchtext[match];
-
-		while (cur == cmp) {
-			++i;
-			++match;
-			if (cmp == L'\0') {
-				auto& v = GameProcessInfo.exe.version;
-				auto ret = swscanf_s(&haystack[i], L"%u.%u.%u.%u", &v.major, &v.minor, &v.build, &v.revision);
-				assert(ret == 4);
-				goto FINISHED;
-			}
-			cur = haystack[i];
-			cmp = searchtext[match];
-		}
-	}
-
-FINISHED:
-	const auto& v = GameProcessInfo.exe.version;
+	// L"ProductVersion"
+	const char* aob = "50 00 72 00 6f 00 64 00 75 00 63 00 74 00 56 00 65 00 72 00 73 00 69 00 6f 00 6e 00";
+	auto offset = aob_scan(GameProcessInfo.buffer, (unsigned)GameProcessInfo.buffer_size, GameProcessInfo.exe.rsrc.offset, aob);
+	assert(offset != AOB_NO_MATCH);
+	offset += 30; // L"ProductVersion" + wchar_t null terminator 
+	const char* buffer = (char*)GameProcessInfo.buffer;
+	auto& v = GameProcessInfo.exe.version;
+	auto ret = swscanf_s((wchar_t*) & buffer[offset], L"%u.%u.%u.%u", &v.major, &v.minor, &v.build, &v.revision);
+	assert(ret == 4);
 	Log("Game Version: %u.%u.%u.%u", v.major, v.minor, v.build, v.revision);
 }
