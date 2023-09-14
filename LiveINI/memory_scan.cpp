@@ -11,7 +11,6 @@ extern "C" {
 #endif
 
 static std::vector<Setting> results{};
-static uint64_t memory_scan_in_progress = false;
 
 static const wchar_t* GetEXEVersion();
 
@@ -53,30 +52,41 @@ static uintptr_t find(const Pointer haystack, const Pointer endptr, uint64_t * c
 }
 
 //should cache result?
-static unsigned get_rdata_offset(const Pointer haystack) {
-	unsigned offset = 0;
-	{
-		IMAGE_DOS_HEADER hdr;
-		memcpy(&hdr, haystack.as<const void*>(), sizeof(hdr));
+extern void perform_exe_section_analysis() {
+	assert(GameProcessInfo.buffer != NULL);
+	assert(GameProcessInfo.buffer_size != 0);
+	const Pointer haystack{ GameProcessInfo.buffer };
 
-		IMAGE_NT_HEADERS64 hdr2;
-		memcpy(&hdr2, (haystack + hdr.e_lfanew).as<const void*>(), sizeof(IMAGE_NT_HEADERS64));
+	IMAGE_DOS_HEADER hdr;
+	memcpy(&hdr, haystack.as<const void*>(), sizeof(hdr));
 
-		const auto sections = (haystack + hdr.e_lfanew + sizeof(IMAGE_NT_HEADERS64)).as<const IMAGE_SECTION_HEADER*>();
-		const auto nr_sections = hdr2.FileHeader.NumberOfSections;
+	IMAGE_NT_HEADERS64 hdr2;
+	memcpy(&hdr2, (haystack + hdr.e_lfanew).as<const void*>(), sizeof(IMAGE_NT_HEADERS64));
 
-		for (auto i = 0; i < nr_sections; ++i) {
-			const auto &s = sections[i];
-			//Log("%8.8s: %8X - %8X", s.Name, s.VirtualAddress, (s.VirtualAddress + s.SizeOfRawData));
-			if (memcmp(".rdata", s.Name, 7) == 0) {
-				offset = s.VirtualAddress;
-				Log("rdata offset: %X", offset);
-				break;
-			}
+	const auto sections = (haystack + hdr.e_lfanew + sizeof(IMAGE_NT_HEADERS64)).as<const IMAGE_SECTION_HEADER*>();
+	const auto nr_sections = hdr2.FileHeader.NumberOfSections;
+
+	for (auto i = 0; i < nr_sections; ++i) {
+		const auto &s = sections[i];
+
+		Log("%8.8s: %8X - %8X", s.Name, s.VirtualAddress, (s.VirtualAddress + s.SizeOfRawData));
+			
+		if (memcmp(".text", s.Name, sizeof(".text") - 1)) {
+			GameProcessInfo.exe.text = { s.VirtualAddress, s.SizeOfRawData };
+		}
+
+		if (memcmp(".rdata", s.Name, sizeof(".rdata") - 1)) {
+			GameProcessInfo.exe.rdata = { s.VirtualAddress, s.SizeOfRawData };
+		}
+
+		if (memcmp(".data", s.Name, sizeof(".data") - 1)) {
+			GameProcessInfo.exe.data = { s.VirtualAddress, s.SizeOfRawData };
+		}
+
+		if (memcmp(".rsrc", s.Name, sizeof(".rsrc") - 1)) {
+			GameProcessInfo.exe.rsrc = { s.VirtualAddress, s.SizeOfRawData };
 		}
 	}
-
-	return offset;
 }
 
 
@@ -85,7 +95,7 @@ extern void build_rtti_list(void) {
 	GameProcessInfo.rtti_map.reserve(32768);
 
 	const Pointer haystack{ GameProcessInfo.buffer };
-	uintptr_t pos = get_rdata_offset(haystack);
+	uintptr_t pos = GameProcessInfo.exe.rdata.offset;
 	static const uint32_t rtti_bytes = *(const uint32_t*)".?AV";
 	while (find(haystack, haystack + GameProcessInfo.buffer_size, &pos, rtti_bytes)) {
 		const std::string tmp = { (haystack + pos).as<const char*>() };
@@ -116,7 +126,7 @@ extern uintptr_t find_vtable(const char* const rtti_name) {
 
 
 	const Pointer haystack{ GameProcessInfo.buffer };
-	const auto offset = get_rdata_offset(haystack);
+	const auto offset = GameProcessInfo.exe.rdata.offset;
 	uintptr_t object_locator_offset = offset;
 	while (find(haystack, haystack + GameProcessInfo.buffer_size, &object_locator_offset, rtti_name_offset)) {
 		if (*(haystack + object_locator_offset - 0x8).as<uint64_t*>() == 0x1ULL) {
@@ -140,7 +150,6 @@ extern uintptr_t find_vtable(const char* const rtti_name) {
 
 
 static DWORD WINAPI vtable_scan_threadproc(LPVOID) {
-	memory_scan_in_progress = true;
 	results.clear();
 	results.reserve(16384); //more than enough for all game settings
 
@@ -157,7 +166,7 @@ static DWORD WINAPI vtable_scan_threadproc(LPVOID) {
 		{0, GameSettingFlag::OriginUnknown},
 	};
 
-	const auto start_offset = get_rdata_offset(buffer);
+	const auto start_offset = GameProcessInfo.exe.rdata.offset;
 	for (uint64_t vt = 0; settings_vtable[vt].offset; ++vt) {
 		uintptr_t offset = start_offset;
                 char tmp_name[128];
@@ -171,18 +180,18 @@ static DWORD WINAPI vtable_scan_threadproc(LPVOID) {
                                 continue;
                         }
 
+			tmp_name[127] = 0;
                         s.m_name = tmp_name;
 			s.m_flags = settings_vtable[vt].origin | s.GetGameSettingType(s.m_name[0]);
-	
-			std::transform(s.m_name.begin(), s.m_name.end(), std::back_inserter(s.m_search_name), ::tolower);
+			for (const auto chr : s.m_name) {
+				s.m_search_name += (char)::tolower(chr);
+			}
 			s.m_current = s.m_setting.Active;
 			s.m_active = s.m_setting.Active;
 			results.push_back(s);
 			offset += sizeof(GameSetting);
 		}
 	}
-
-	memory_scan_in_progress = false;
 	return 0;
 }
 
@@ -315,17 +324,66 @@ extern void scan_vtable(void) {
 }
 
 extern void scan_window_draw(void) {
-	if (memory_scan_in_progress) {
+	static char searchtext[64] = {};
+	static uint64_t include_mask = UINT64_MAX;
+	static uint64_t exclude_mask = 0;
+	static auto results_begin = results.begin();
+	static auto results_end = results.end();
+	static auto results_count = std::distance(results_begin, results_end);
+
+	if (results.empty()) {
+		ImGui::Text("Press the Scan Starfield button in the log window!");
 		return;
 	}
 
-	static char searchtext[64] = {};
-	ImGui::InputText("Search", searchtext, 64);
-	for (unsigned i = 0; searchtext[i]; ++i) searchtext[i] = (char)::tolower(searchtext[i]);
+	if (ImGui::InputText("Search", searchtext, 64)) {
+		results_begin = results.begin();
+		results_end = results.end();
 
-	static uint64_t include_mask = UINT64_MAX;
-	static uint64_t exclude_mask = 0;
-	bool dump_results{ false };
+		for (unsigned i = 0; searchtext[i]; ++i) {
+			searchtext[i] = (char)::tolower(searchtext[i]);
+		}
+
+		const char* error_message = NULL;
+		Reprog* prog = regcomp(searchtext, 0, &error_message);
+
+		for (auto& x : results) {
+			x.search_match = false;
+
+			if (!(x.m_flags & include_mask)) continue;
+			if (x.m_flags & exclude_mask) continue;
+
+			if (*searchtext) {
+				if (prog && (error_message == NULL)) {
+					Resub sub;
+					regexec(prog, x.m_search_name.c_str(), &sub, 0);
+					if (sub.sub[0].sp == NULL) continue;
+				}
+				else {
+					if (x.m_search_name.find(searchtext) == x.m_search_name.npos) continue;
+				}
+			}
+
+			x.search_match = true;
+		}
+		regfree(prog);
+
+		results_end = std::partition(
+			results_begin,
+			results_end,
+			[](const Setting& s) -> bool {
+				return s.search_match;
+			});
+
+		std::sort(
+			results_begin,
+			results_end,
+			[](const Setting& a, const Setting& b) -> bool {
+				return (a.m_address < b.m_address);
+			});
+
+		results_count = std::distance(results_begin, results_end);
+	}
 
 	if (ImGui::TreeNode("Search Options")) {
 		ImGui::Text("Include Any of these properties");
@@ -371,7 +429,23 @@ extern void scan_window_draw(void) {
 		ImGui::Separator();
 
 		if (ImGui::Button("Save Search Results to ./search_results.txt")) {
-			dump_results = true;
+			FILE* f = NULL;
+			fopen_s(&f, "search_results.txt", "wb");
+			assert(f != NULL);
+			fprintf(f, "## Generated by LiveINI - https://www.nexusmods.com/starfield/mods/976\r\n");
+			fprintf(f, "## Starfield EXE version: %S\r\n", GetEXEVersion());
+			fprintf(f, "## Double pipe characters are used as the unique delimiter\r\n");
+			fprintf(f, "## Setting || DefaultValue || INIValue || CurrentValue || Origin\r\n");
+
+			for (auto i = results_begin; i != results_end; ++i) {
+				auto vdefault = stringify_value(i->m_setting.Default, i->m_flags);
+				auto vini = stringify_value(i->m_setting.Active, i->m_flags);
+				auto vcur = stringify_value(i->m_current, i->m_flags);
+				auto origin = Setting::GetGameSettingOriginName(i->m_flags);
+				fprintf(f, "%s || %s || %s || %s || %s\r\n", i->m_name.c_str(), vdefault.c_str(), vini.c_str(), vcur.c_str(), origin);
+			}
+
+			fclose(f);
 		}
 
 		if (ImGui::Button("Reset All changed settings")) {
@@ -380,75 +454,29 @@ extern void scan_window_draw(void) {
 		ImGui::TreePop();
 	}
 
-	static unsigned displayed_results{ 0 };
 	ImGui::SameLine();
-	ImGui::Text("| Results: %u/%I64d", displayed_results, results.size());
+	ImGui::Text("| Results: %u/%I64d", results_count, results.size());
 
 	ImGui::BeginChild("results_section", ImVec2{}, false, ImGuiWindowFlags_NoScrollbar);
 
-	FILE *f = nullptr;
-	if (dump_results) {
-		fopen_s(&f, "search_results.txt", "wb");
-		assert(f != NULL);
-		fprintf(f, "## Generated by LiveINI - https://www.nexusmods.com/starfield/mods/976\r\n");
-		fprintf(f, "## Starfield EXE version: %S\r\n", GetEXEVersion());
-		fprintf(f, "## Double pipe characters are used as the unique delimiter\r\n");
-		fprintf(f, "## Setting || DefaultValue || INIValue || CurrentValue || Origin\r\n");
-	}
-
-	displayed_results = 0;
-
-	const char* error_message = NULL;
-	Reprog* prog = regcomp(searchtext, 0, &error_message);
-	if (error_message) {
-		//printf("%s\n", error_message);
-		OutputDebugStringA(error_message);
-	}
-
-	for (auto& x : results) {
-		if (!(x.m_flags & include_mask)) continue;
-		if (x.m_flags & exclude_mask) continue;
-
-		if (*searchtext) {
-			if (prog && (error_message == NULL)) {
-				Resub sub;
-				regexec(prog, x.m_search_name.c_str(), &sub, 0);
-				if (sub.sub[0].sp == NULL) continue;
+	ImGuiListClipper clip;
+	clip.Begin((int)results_count, ImGui::GetTextLineHeightWithSpacing());
+	while (clip.Step()) {
+		for (auto i = clip.DisplayStart; i < clip.DisplayEnd; ++i) {
+			auto& x = results[i];
+			ImGui::PushID(&x);
+			if (StyleCollapsingHeader(x.m_name.c_str())) {
+				EditSetting(x);
 			}
-			else {
-				if (x.m_search_name.find(searchtext) == x.m_search_name.npos) continue;
-			}
+			ImGui::PopID();
 		}
-		++displayed_results;
-
-		if (dump_results) {
-			auto vdefault = stringify_value(x.m_setting.Default, x.m_flags);
-			auto vini = stringify_value(x.m_setting.Active, x.m_flags);
-			auto vcur = stringify_value(x.m_current, x.m_flags);
-			auto origin = Setting::GetGameSettingOriginName(x.m_flags);
-			fprintf(f, "%s || %s || %s || %s || %s\r\n", x.m_name.c_str(), vdefault.c_str(), vini.c_str(), vcur.c_str(), origin);
-		}
-
-		ImGui::PushID(&x);
-		if (StyleCollapsingHeader(x.m_name.c_str())) {
-			EditSetting(x);
-		}
-		ImGui::PopID();
 	}
-	regfree(prog);
-
-	if (dump_results) {
-		fclose(f);
-	}
-
 	ImGui::EndChild();
 }
 
 
 static const wchar_t* GetEXEVersion() {
-	const wchar_t searchtext[] = L"ProductVersion\0";
-	const auto searchcount = sizeof(searchtext) / sizeof(searchtext[0]);
-
+	const wchar_t* searchtext = L"ProductVersion";
 	const wchar_t* haystack = (wchar_t*) GameProcessInfo.buffer;
 	const auto count = GameProcessInfo.buffer_size / sizeof(*haystack);
 

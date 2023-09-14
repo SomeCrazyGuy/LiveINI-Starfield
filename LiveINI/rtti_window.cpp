@@ -40,7 +40,9 @@ void draw_rtti_window() {
         static auto match_end = rtti.end();
 
         if (ImGui::InputText("Search", searchbuffer, 128)) {
-                for (unsigned i = 0; searchbuffer[i]; ++i) searchbuffer[i] = ::tolower(searchbuffer[i]);
+                for (unsigned i = 0; searchbuffer[i]; ++i) {
+                        searchbuffer[i] = (char)::tolower(searchbuffer[i]);
+                }
 
                 const char* error_string = NULL;
                 Reprog* regex = regcomp(searchbuffer, 0, &error_string);
@@ -75,7 +77,7 @@ void draw_rtti_window() {
         ImGui::BeginChild("rtti_results_section", ImVec2{}, false, ImGuiWindowFlags_NoScrollbar);
 
         ImGuiListClipper clip{};
-        clip.Begin(result_count, ImGui::GetTextLineHeightWithSpacing());
+        clip.Begin((int)result_count, ImGui::GetTextLineHeightWithSpacing());
         while (clip.Step()) {
                 for (auto i = clip.DisplayStart; i < clip.DisplayEnd; ++i) {
                         ImGui::PushID(i);

@@ -1,8 +1,3 @@
-// Dear ImGui: standalone example application for DirectX 11
-// If you are new to Dear ImGui, read documentation from the docs/ folder + read the top of imgui.cpp.
-// Read online: https://github.com/ocornut/imgui/tree/master/docs
-
-
 #include "main.h"
 #include "memory_scan.h"
 #include "process.h"
@@ -69,10 +64,8 @@ static void ScanStarfield() {
                 goto BAIL_OUT;
         }
 
+        perform_exe_section_analysis();
         build_rtti_list();
-
-        Log("Starfield process memory read completed");
-
         scan_vtable();
 BAIL_OUT:
         ;
@@ -104,12 +97,9 @@ int WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
-    //ImGui::StyleColorsClassic();
 
     //setup fonts
     io.Fonts->AddFontFromMemoryCompressedTTF(FONT_buffer, FONT_size, 16.f);
@@ -121,12 +111,7 @@ int WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // Main loop
     bool done = false;
     while (!done)
-    {
-        // Poll and handle messages (inputs, window resize, etc.)
-        // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
-        // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
-        // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application.
-        // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
+    { 
         MSG msg;
         while (::PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
         {
@@ -167,10 +152,10 @@ int WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 				scan_window_draw();
 				ImGui::EndTabItem();
 			}
-            if (ImGui::BeginTabItem("RTTI")) {
-                draw_rtti_window();
-                ImGui::EndTabItem();
-            }
+                        if (ImGui::BeginTabItem("RTTI")) {
+                                draw_rtti_window();
+                                ImGui::EndTabItem();
+                        }
 			ImGui::EndTabBar();
 		}
 	}

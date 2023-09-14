@@ -48,6 +48,7 @@ struct Setting {
 	GameValue m_active;
 	GameValue m_current;
 	uintptr_t m_address;
+	bool search_match;
 
 	static GameSettingFlag GetGameSettingType(const char c);
 	static const char* GetGameSettingTypeName(const uint64_t gst);

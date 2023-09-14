@@ -82,6 +82,15 @@ struct ProcessInfo {
 	uint64_t base_address;
 	DWORD proc_id;
 	std::unordered_map<std::string, unsigned> rtti_map;
+	
+	struct ExeInfo {
+		struct SectionInfo {
+			uint32_t offset;
+			uint32_t size;
+		}
+		text, rdata, data, rsrc;
+	} exe;
+
 	std::vector<MemoryBlock> blocks;
 };
 
