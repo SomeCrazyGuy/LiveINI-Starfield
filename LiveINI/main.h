@@ -89,6 +89,12 @@ struct ProcessInfo {
 			uint32_t size;
 		}
 		text, rdata, data, rsrc;
+		struct Version {
+			unsigned major;
+			unsigned minor;
+			unsigned build;
+			unsigned revision;
+		} version;
 	} exe;
 
 	std::vector<MemoryBlock> blocks;

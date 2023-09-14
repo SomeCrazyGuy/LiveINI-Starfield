@@ -65,6 +65,7 @@ static void ScanStarfield() {
         }
 
         perform_exe_section_analysis();
+        perform_exe_version_analysis();
         build_rtti_list();
         scan_vtable();
 BAIL_OUT:
