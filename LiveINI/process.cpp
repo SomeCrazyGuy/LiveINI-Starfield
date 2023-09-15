@@ -120,9 +120,11 @@ extern MemoryBlock GetProcessBlock(void) {
 }
 
 
-extern bool RPM(HANDLE process, uintptr_t address, void* buffer, uint64_t read_size) {
+extern bool RPM(uintptr_t address, void* buffer, uint64_t read_size) {
+	const auto proc = GameProcessInfo.process;
+	assert(proc != NULL);
 	SIZE_T bytes_read;
-	BOOL result = ReadProcessMemory(process, (LPCVOID)address, (LPVOID)buffer, (SIZE_T)read_size, &bytes_read);
+	BOOL result = ReadProcessMemory(proc, (LPCVOID)address, (LPVOID)buffer, (SIZE_T)read_size, &bytes_read);
 	const auto ret = (result && (read_size == bytes_read));
 	if (!ret) {
 		Log("RPM Failed: %p", address);
@@ -130,9 +132,11 @@ extern bool RPM(HANDLE process, uintptr_t address, void* buffer, uint64_t read_s
 	return ret;
 }
 
-extern bool WPM(HANDLE process, uintptr_t address, void* buffer, uint64_t write_size) {
+extern bool WPM(uintptr_t address, void* buffer, uint64_t write_size) {
+	const auto proc = GameProcessInfo.process;
+	assert(proc != NULL);
 	SIZE_T bytes_written;
-	BOOL result = WriteProcessMemory(process, (LPVOID)address, (LPCVOID)buffer, (SIZE_T)write_size, &bytes_written);
+	BOOL result = WriteProcessMemory(proc, (LPVOID)address, (LPCVOID)buffer, (SIZE_T)write_size, &bytes_written);
 	const auto ret = (result && (write_size == bytes_written));
 	if (!ret) {
 		Log("WPM Failed: %p", address);

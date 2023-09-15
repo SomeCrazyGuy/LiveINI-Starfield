@@ -54,5 +54,5 @@ struct Setting {
 	static const char* GetGameSettingTypeName(const uint64_t gst);
 	static const char* GetGameSettingOriginName(const uint64_t gso);
 
-	bool Update(HANDLE process);
+	bool Update();
 };

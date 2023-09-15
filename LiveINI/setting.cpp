@@ -37,10 +37,10 @@ const char* Setting::GetGameSettingOriginName(const uint64_t gso) {
 }
 
 
-bool Setting::Update(HANDLE process) {
+bool Setting::Update() {
 	GameSetting setting;
 	Log("->%s", this->m_name.c_str());
-	if (!RPM(process, this->m_address, &setting, sizeof(setting))) return false;
+	if (!RPM(this->m_address, &setting, sizeof(setting))) return false;
 	if (setting.vTable != this->m_setting.vTable) {
 		Log("vTable Mismatch!");
 		return false;
@@ -55,6 +55,6 @@ bool Setting::Update(HANDLE process) {
 	}
 	setting.Active = this->m_current;
 	this->m_active = this->m_current;
-	if (!WPM(process, this->m_address, &setting, sizeof(setting))) return false;
+	if (!WPM(this->m_address, &setting, sizeof(setting))) return false;
 	return true;
 }

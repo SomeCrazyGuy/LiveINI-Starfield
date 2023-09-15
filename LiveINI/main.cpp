@@ -59,7 +59,7 @@ static void ScanStarfield() {
                 goto BAIL_OUT;
         }
 
-        if (!RPM(GameProcessInfo.process, mb.address, GameProcessInfo.buffer, mb.size)) {
+        if (!RPM(mb.address, GameProcessInfo.buffer, mb.size)) {
                 Log("Could not read process memory");
                 goto BAIL_OUT;
         }

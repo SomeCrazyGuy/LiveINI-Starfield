@@ -176,7 +176,7 @@ static DWORD WINAPI vtable_scan_threadproc(LPVOID) {
 			s.m_setting = *(buffer + offset).as<const GameSetting*>();
 			//s.m_name = ((Pointer(s.m_setting.Name) - GameProcessInfo.base_address) + buffer).as<const char*>();
                         
-                        if (!RPM(GameProcessInfo.process, s.m_setting.Name, tmp_name, 128)) {
+                        if (!RPM(s.m_setting.Name, tmp_name, 128)) {
                                 continue;
                         }
 
@@ -222,7 +222,7 @@ static std::string stringify_value(const GameValue& v, const uint64_t t) {
 	if (t & GameSettingFlag::TypeUnknown) return "<unknown>";
         if (t & GameSettingFlag::TypeString) {
                 char localbuffer[1024];
-                RPM(GameProcessInfo.process, v.as_ptr, localbuffer, 1024);
+                RPM(v.as_ptr, localbuffer, 1024);
                 localbuffer[1023] = '\0';
                 return std::string{ localbuffer };
         }
@@ -248,7 +248,7 @@ static void EditSetting(Setting& s) {
 
 	if (ImGui::Button("Revert##default")) {
 		s.m_current = s.m_setting.Default;
-		s.Update(GameProcessInfo.process);
+		s.Update();
 		s.m_flags |= GameSettingFlag::FlagChanged;
 	}
 	ImGui::SameLine();
@@ -260,7 +260,7 @@ static void EditSetting(Setting& s) {
 
 	if (ImGui::Button("Revert##ini")) {
 		s.m_current = s.m_setting.Active;
-		s.Update(GameProcessInfo.process);
+		s.Update();
 		s.m_flags &= ~GameSettingFlag::FlagChanged;
 	}
 	ImGui::SameLine();
@@ -281,7 +281,7 @@ static void EditSetting(Setting& s) {
 	ImGui::Text("Active Value %s", str_active.c_str());
 
 	if (ImGui::Button("Apply")) {
-		s.Update(GameProcessInfo.process);
+		s.Update();
 		s.m_flags |= GameSettingFlag::FlagChanged;
 	}
 	ImGui::SameLine();
@@ -314,7 +314,7 @@ static void reset_changed_settings(void) {
 		if (!(x.m_flags & GameSettingFlag::FlagChanged)) continue;
 		x.m_flags &= ~GameSettingFlag::FlagChanged;
 		x.m_current = x.m_setting.Active;
-		x.Update(GameProcessInfo.process);
+		x.Update();
 	}
 }
 
