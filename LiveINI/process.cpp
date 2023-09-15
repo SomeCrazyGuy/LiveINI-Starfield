@@ -131,9 +131,9 @@ extern bool RPM(HANDLE process, uintptr_t address, void* buffer, uint64_t read_s
 }
 
 extern bool WPM(HANDLE process, uintptr_t address, void* buffer, uint64_t write_size) {
-	SIZE_T bytes_read;
-	BOOL result = WriteProcessMemory(process, (LPVOID)address, (LPCVOID)buffer, (SIZE_T)write_size, &bytes_read);
-	const auto ret = (result && (write_size == bytes_read));
+	SIZE_T bytes_written;
+	BOOL result = WriteProcessMemory(process, (LPVOID)address, (LPCVOID)buffer, (SIZE_T)write_size, &bytes_written);
+	const auto ret = (result && (write_size == bytes_written));
 	if (!ret) {
 		Log("WPM Failed: %p", address);
 	}
