@@ -60,52 +60,6 @@ static uintptr_t GetProcessBaseAddress(HANDLE process) {
 	return 0;
 }
 
-
-extern void GetProcessMemoryBlocks(void) {
-	typedef LONG(NTAPI *PNTAPI)(
-		HANDLE ProcessHandle,
-		PVOID BaseAddress,
-		int MemoryInformationClass, //must be 0
-		PVOID Buffer,
-		SIZE_T Length,
-		PSIZE_T ResultLength
-		);
-
-	GameProcessInfo.blocks.clear();
-
-	Log("Heap analysis");
-
-	static const uintptr_t ADDR_MIN = { 0x000000000000ULL };
-	static const uintptr_t ADDR_MAX = { 0x7FFFFFFFFFFFULL };
-	static const auto NtQueryVirtualMemory = (PNTAPI)GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtQueryVirtualMemory");
-	static const uintptr_t end = GameProcessInfo.base_address;
-
-	MEMORY_BASIC_INFORMATION mbi;
-	for (uintptr_t address = ADDR_MIN; address < ADDR_MAX; address += mbi.RegionSize) {
-		NtQueryVirtualMemory(GameProcessInfo.process, (PVOID)address, 0, &mbi, sizeof(mbi), 0);
-
-		if (!mbi.RegionSize) break;
-		if (mbi.State != MEM_COMMIT) continue;
-		if (!(mbi.Type & MEM_PRIVATE)) continue;
-		if (mbi.Protect & (PAGE_GUARD | PAGE_NOCACHE | PAGE_WRITECOMBINE | PAGE_NOACCESS)) continue;
-		if (mbi.RegionSize < (1 << 27)) continue; //skip (<128MB) blocks
-		if (address > end) continue;
-
-		MemoryBlock blk;
-		blk.address = address;
-		blk.size = mbi.RegionSize;
-		blk.flags = 0;
-		blk.flags |= (mbi.Protect & (PAGE_EXECUTE_READ | PAGE_READONLY | PAGE_READWRITE | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY | PAGE_WRITECOPY)) ? MemoryFlag_Read : 0;
-		blk.flags |= (mbi.Protect & (PAGE_WRITECOPY | PAGE_READWRITE | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY)) ? MemoryFlag_Write : 0;
-		blk.flags |= (mbi.Protect & (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY)) ? MemoryFlag_Execute : 0;
-		if (blk.flags & MemoryFlag::MemoryFlag_Execute) continue;
-		if (blk.flags * MemoryFlag::MemoryFlag_Write) {
-			GameProcessInfo.blocks.push_back(blk);
-		}
-		Log("Adding Memory Block: %p", address);
-	}
-}
-
 extern MemoryBlock GetProcessBlock(void) {
 	MemoryBlock ret = {0};
 	HMODULE base = (HMODULE) GetProcessBaseAddress(GameProcessInfo.process);
