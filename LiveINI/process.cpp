@@ -2,6 +2,41 @@
 
 #include <TlHelp32.h>
 
+
+
+
+
+extern DWORD GetProcessIdByWindowTitle(const wchar_t* window_title) {
+	static DWORD proc;
+
+	static const auto EnumWindowsProc_FindWindow = [](HWND window, LPARAM userdata) -> BOOL {
+		wchar_t buffer[64];
+
+		if (!GetWindowTextW(window, buffer, 64)) {
+			return TRUE;
+		}
+
+		if (_wcsicmp((const wchar_t*)userdata, buffer)) {
+			return TRUE;
+		}
+
+		if (!GetWindowThreadProcessId(window, &proc)) {
+			return TRUE;
+		}
+
+		return FALSE;
+	};
+
+	proc = 0;
+	EnumWindows(EnumWindowsProc_FindWindow, (LPARAM)window_title);
+
+	return proc;
+}
+
+
+
+
+
 extern DWORD GetProcessIdByExeName(const char* exe_name) {
 	DWORD ret = 0;
 

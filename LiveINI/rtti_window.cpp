@@ -3,7 +3,7 @@
 #include "memory_scan.h"
 
 extern "C" {
-        #include "minilibs/regexp.h"
+#include "minilibs/regexp.h"
 }
 
 struct RTTIDetail {
@@ -89,8 +89,13 @@ void draw_rtti_window() {
                                         r.vtable_ptr = find_vtable(r.name.c_str());
                                 }
 
+                                uint64_t imagebase_offset = r.vtable_ptr - GameProcessInfo.base_address;
+
                                 snprintf(vtable_text, 64, "0x%p", (void*)r.vtable_ptr);
                                 ImGui::InputText("Vtable Pointer", vtable_text, 64, ImGuiInputTextFlags_ReadOnly);
+
+                                snprintf(vtable_text, 64, "0x%X", (uint32_t)imagebase_offset);
+                                ImGui::InputText("Offset", vtable_text, 64, ImGuiInputTextFlags_ReadOnly);
                         }
                         ImGui::PopID();
                 }

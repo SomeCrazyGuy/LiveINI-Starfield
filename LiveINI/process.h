@@ -2,7 +2,7 @@
 
 #include "main.h"
 
-
+extern DWORD GetProcessIdByWindowTitle(const wchar_t* window_title);
 extern DWORD GetProcessIdByExeName(const char* exe_name);
 extern void GetProcessMemoryBlocks(void);
 extern MemoryBlock GetProcessBlock(void);
