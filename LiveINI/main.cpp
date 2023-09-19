@@ -3,6 +3,7 @@
 #include "process.h"
 #include "font.h"
 #include "rtti_window.h"
+#include "aob_window.h"
 
 // Init global data
 extern ProcessInfo GameProcessInfo = { nullptr };
@@ -162,6 +163,10 @@ int WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
                                 }
                                 if (ImGui::BeginTabItem("RTTI")) {
                                         draw_rtti_window();
+                                        ImGui::EndTabItem();
+                                }
+                                if (ImGui::BeginTabItem("AOB")) {
+                                        draw_aob_window();
                                         ImGui::EndTabItem();
                                 }
                                 ImGui::EndTabBar();

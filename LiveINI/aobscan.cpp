@@ -2,17 +2,13 @@
 #include "aobscan.h"
 
 
+static constexpr uint16_t sig_end = 0xFFFF;
 
-extern unsigned aob_scan(const void* buffer, unsigned buffer_size, unsigned starting_offset, const char* signature) {
-        assert(starting_offset < buffer_size);
-
-        const unsigned char* haystack = (const unsigned char*)buffer + starting_offset;
-        const unsigned count = buffer_size - starting_offset;
+extern AOB_SIG aob_compile(const char* signature) {
         const auto siglen = strlen(signature);
 
         //compile signature
-        constexpr uint16_t sig_end = 0xFFFF;
-        uint16_t* sig = (uint16_t*) malloc((siglen + 1) * 2);
+        uint16_t* sig = (uint16_t*)malloc((siglen + 1) * 2);
         assert(sig != NULL);
 
         static const auto unhex = [](char upper, char lower) -> uint16_t {
@@ -59,9 +55,30 @@ extern unsigned aob_scan(const void* buffer, unsigned buffer_size, unsigned star
                 assert(matchcount < siglen);
                 sig[matchcount++] = unhex(upper, lower);
 
-                if (test != ' ') break;
+                if ((test != ' ') && (test != '\0')) {
+                        Log("signature-bad format: %s", &signature[i - 3]);
+                        free(sig);
+                        return NULL;
+                }
         }
+
         sig[matchcount] = sig_end;
+
+        return sig;
+}
+
+
+extern void aob_free(AOB_SIG sig) {
+        free(sig);
+}
+
+
+extern unsigned aob_scan(const void* buffer, unsigned buffer_size, unsigned starting_offset, AOB_SIG sig) {
+        assert(starting_offset < buffer_size);
+
+        const unsigned char* haystack = (const unsigned char*)buffer + starting_offset;
+        const unsigned count = buffer_size - starting_offset;
+        
 
         for (unsigned i = 0; i < count; ++i) {
                 auto match = 0;

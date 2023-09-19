@@ -482,8 +482,9 @@ extern void perform_exe_version_analysis() {
 	// to brute-force search the .rsrc section of the exe since we already have it in a buffer
 
 	// L"ProductVersion"
-	const char* aob = "50 00 72 00 6f 00 64 00 75 00 63 00 74 00 56 00 65 00 72 00 73 00 69 00 6f 00 6e 00";
+	AOB_SIG aob = aob_compile("50 00 72 00 6f 00 64 00 75 00 63 00 74 00 56 00 65 00 72 00 73 00 69 00 6f 00 6e 00");
 	auto offset = aob_scan(GameProcessInfo.buffer, (unsigned)GameProcessInfo.buffer_size, GameProcessInfo.exe.rsrc.offset, aob);
+	aob_free(aob);
 	assert(offset != AOB_NO_MATCH);
 	offset += 30; // L"ProductVersion" + wchar_t null terminator 
 	const char* buffer = (char*)GameProcessInfo.buffer;

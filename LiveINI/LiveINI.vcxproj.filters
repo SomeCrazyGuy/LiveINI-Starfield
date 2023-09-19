@@ -49,6 +49,9 @@
     <ClCompile Include="rtti_window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="aob_window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h">
@@ -101,6 +104,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="rtti_window.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="aob_window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
