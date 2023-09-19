@@ -102,6 +102,7 @@
     <ClCompile Include="log_window.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="memory_scan.cpp" />
+    <ClCompile Include="method_window.cpp" />
     <ClCompile Include="minilibs\regexp.c" />
     <ClCompile Include="process.cpp" />
     <ClCompile Include="rtti_window.cpp" />
@@ -122,6 +123,7 @@
     <ClInclude Include="imgui\imstb_truetype.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="memory_scan.h" />
+    <ClInclude Include="method_window.h" />
     <ClInclude Include="minilibs\regexp.h" />
     <ClInclude Include="process.h" />
     <ClInclude Include="resource.h" />

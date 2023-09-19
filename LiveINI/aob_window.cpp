@@ -6,12 +6,13 @@ void draw_aob_window() {
         static char buffer[256];
         static std::vector<uint32_t> results;
 
+
         if (!GameProcessInfo.rtti_map.size()) {
                 ImGui::Text("Press Scan Starfield in the log window");
                 return;
         }
 
-
+        //TODO: input text filter for hex chars + '?' + ' '
         ImGui::InputText("Signature", buffer, 256);
         ImGui::SameLine();
         if (ImGui::Button("Search")) {

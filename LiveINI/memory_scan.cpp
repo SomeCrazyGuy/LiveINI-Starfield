@@ -115,6 +115,7 @@ extern void turbo_vtable_algorithm() {
 	struct Candidate {
 		uint32_t vtable_offset;
 		uint32_t object_locator_offset;
+		uint32_t func_count;
 	};
 	std::vector<Candidate> Candidates;
 	Candidates.reserve(32768);
@@ -122,13 +123,21 @@ extern void turbo_vtable_algorithm() {
 	//step 1: find a pointer in .rdata that:
 	//	-points to somewhere else in .rdata and
 	//      -is immediately followed by a pointer inside .text
+	//	-keep track of the count of class members
 	for (uint32_t i = 0; i < count; ++i) {
 		if (is_rdata_ptr(haystack[i])) {
 			if (is_text_ptr(haystack[i + 1])) {
-				uint32_t ol_offset = (uint32_t) (12 + (haystack[i] - base));
+				uint32_t ol_offset = (uint32_t)(12 + (haystack[i] - base));
+				uint32_t func_count = 0;
 				++i;
 				uint32_t vt_offset = (rdata_offset + (i * sizeof(*haystack)));
-				Candidates.push_back(Candidate{ vt_offset, ol_offset });
+				while (is_text_ptr(haystack[i])) {
+					++func_count;
+					++i;
+				}
+				--i;
+				
+				Candidates.push_back(Candidate{ vt_offset, ol_offset, func_count });
 			}
 		}
 	}
@@ -139,6 +148,7 @@ extern void turbo_vtable_algorithm() {
 	//step 2: heuristically determine which candidates are accurate by:
 	//              -checking if the typedescriptor pointer is in .data and
 	//              -the type descriptor name starts with '.'
+	//		-on collisions, choose the class with more members
 	const auto count2 = Candidates.size();
 	const char* const baseptr = (char*)GameProcessInfo.buffer;
 	for (size_t i = 0; i < count2; ++i) {
@@ -146,7 +156,12 @@ extern void turbo_vtable_algorithm() {
 		if (!is_data_offset(td_offset)) continue;
 		const char* const name = (baseptr + td_offset + 16);
 		if (name[0] != '.') continue;
-		GameProcessInfo.rtti_map[std::string{name}] = Candidates[i].vtable_offset;
+		const RTTI_Info info{name, Candidates[i].func_count, Candidates[i].vtable_offset};
+
+		auto& result = GameProcessInfo.rtti_map[std::string{ name }];
+		if (result.func_count < info.func_count) {
+			result = info;
+		}
 	}
 
 #undef is_text_ptr
@@ -159,7 +174,7 @@ extern uintptr_t find_vtable(const char* const rtti_name) {
 	Log("find_vtable: %s", rtti_name);
 	const auto search = GameProcessInfo.rtti_map.find(std::string{ rtti_name });
 	if (search == GameProcessInfo.rtti_map.end()) return 0;
-	auto ret = GameProcessInfo.base_address + search->second;
+	auto ret = GameProcessInfo.base_address + search->second.vtable_offset;
 	Log("Found: %p", (void*)ret);
 	return ret;
 }

@@ -19,14 +19,17 @@ void draw_rtti_window() {
         static char searchbuffer[128];
         static std::vector<RTTIDetail> rtti;
 
-        if (GameProcessInfo.rtti_map.empty()) return;
+        if (!GameProcessInfo.rtti_map.size()) {
+                ImGui::Text("Press Scan Starfield in the log window");
+                return;
+        }
 
         if (rtti.empty()) {
                 rtti.reserve(GameProcessInfo.rtti_map.size());
                 for (const auto& x : GameProcessInfo.rtti_map) {
                         RTTIDetail d;
                         d.name = x.first;
-                        d.offset = x.second;
+                        d.offset = x.second.vtable_offset;
                         d.vtable_ptr = 0;
                         d.match = false;
                         for (const auto i : d.name) {
@@ -85,17 +88,16 @@ void draw_rtti_window() {
                         if (ImGui::CollapsingHeader(r.name.c_str())) {
                                 static char vtable_text[64];
 
-                                if (r.vtable_ptr == 0) {
-                                        r.vtable_ptr = find_vtable(r.name.c_str());
-                                }
+                                const auto search = GameProcessInfo.rtti_map.find(r.name);
 
-                                uint64_t imagebase_offset = r.vtable_ptr - GameProcessInfo.base_address;
-
-                                snprintf(vtable_text, 64, "0x%p", (void*)r.vtable_ptr);
+                                snprintf(vtable_text, 64, "0x%p", (void*)(GameProcessInfo.base_address + search->second.vtable_offset));
                                 ImGui::InputText("Vtable Pointer", vtable_text, 64, ImGuiInputTextFlags_ReadOnly);
 
-                                snprintf(vtable_text, 64, "0x%X", (uint32_t)imagebase_offset);
+                                snprintf(vtable_text, 64, "0x%X", search->second.vtable_offset);
                                 ImGui::InputText("Offset", vtable_text, 64, ImGuiInputTextFlags_ReadOnly);
+
+                                snprintf(vtable_text, 64, "%u", search->second.func_count);
+                                ImGui::InputText("Member Count", vtable_text, 64, ImGuiInputTextFlags_ReadOnly);
                         }
                         ImGui::PopID();
                 }

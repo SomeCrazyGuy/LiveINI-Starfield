@@ -52,6 +52,9 @@
     <ClCompile Include="aob_window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="method_window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h">
@@ -107,6 +110,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="aob_window.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="method_window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

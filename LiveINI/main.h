@@ -75,13 +75,21 @@ struct MemoryBlock {
 	unsigned flags;
 };
 
+
+struct RTTI_Info {
+	const char* name;
+	uint32_t func_count;
+	uint32_t vtable_offset;
+};
+
+
 struct ProcessInfo {
 	HANDLE process;
 	void* buffer;
 	uint64_t buffer_size;
 	uint64_t base_address;
 	DWORD proc_id;
-	std::unordered_map<std::string, unsigned> rtti_map;
+	std::unordered_map<std::string, RTTI_Info> rtti_map;
 	
 	struct ExeInfo {
 		struct SectionInfo {
