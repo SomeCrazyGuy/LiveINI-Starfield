@@ -89,67 +89,83 @@ extern void perform_exe_section_analysis() {
 
 }
 
+extern void turbo_vtable_algorithm() {
+	// Utilize the 2 step turbo vtable algorithm to automagically resolve
+	// an rtti mangled name into the corresponding vtable pointer
+	// no, there are no google results for "turbo vtable algorithm" yet
 
-extern void build_rtti_list(void) {
+	const auto text_start = GameProcessInfo.base_address + GameProcessInfo.exe.text.offset;
+	const auto text_end = text_start + GameProcessInfo.exe.text.size;
+#define is_text_ptr(PTR) (((PTR) >= text_start) && ((PTR) <= text_end))
+
+	const auto rdata_start = GameProcessInfo.base_address + GameProcessInfo.exe.rdata.offset;
+	const auto rdata_end = rdata_start + GameProcessInfo.exe.rdata.size;
+#define is_rdata_ptr(PTR) (((PTR) >= rdata_start) && ((PTR) <= rdata_end))
+
+	const auto data_start = GameProcessInfo.exe.data.offset;
+	const auto data_end = data_start + GameProcessInfo.exe.data.size;
+#define is_data_offset(OFF) (((OFF) >= data_start) && ((OFF) <= data_end))
+
+
+	const uint64_t* haystack = (uint64_t*)((char*)GameProcessInfo.buffer + GameProcessInfo.exe.rdata.offset);
+	const uint32_t count = GameProcessInfo.exe.rdata.size / sizeof(*haystack);
+	const uint32_t rdata_offset = GameProcessInfo.exe.rdata.offset;
+	const uint64_t base = GameProcessInfo.base_address;
+
+	struct Candidate {
+		uint32_t vtable_offset;
+		uint32_t object_locator_offset;
+	};
+	std::vector<Candidate> Candidates;
+	Candidates.reserve(32768);
+
+	//step 1: find a pointer in .rdata that:
+	//	-points to somewhere else in .rdata and
+	//      -is immediately followed by a pointer inside .text
+	for (uint32_t i = 0; i < count; ++i) {
+		if (is_rdata_ptr(haystack[i])) {
+			if (is_text_ptr(haystack[i + 1])) {
+				uint32_t ol_offset = (uint32_t) (12 + (haystack[i] - base));
+				++i;
+				uint32_t vt_offset = (rdata_offset + (i * sizeof(*haystack)));
+				Candidates.push_back(Candidate{ vt_offset, ol_offset });
+			}
+		}
+	}
+
 	GameProcessInfo.rtti_map.clear();
 	GameProcessInfo.rtti_map.reserve(32768);
 
-	const Pointer haystack{ GameProcessInfo.buffer };
-	uintptr_t pos = GameProcessInfo.exe.rdata.offset;
-	static const uint32_t rtti_bytes = *(const uint32_t*)".?AV";
-	while (find(haystack, haystack + GameProcessInfo.buffer_size, &pos, rtti_bytes)) {
-		const std::string tmp = { (haystack + pos).as<const char*>() };
-		GameProcessInfo.rtti_map[tmp] = (unsigned)pos;
-		auto len = tmp.length();
-		if (len & 3) {
-			len = (len | 3) + 1;
-		}
-		pos += len;
+	//step 2: heuristically determine which candidates are accurate by:
+	//              -checking if the typedescriptor pointer is in .data and
+	//              -the type descriptor name starts with '.'
+	const auto count2 = Candidates.size();
+	const char* const baseptr = (char*)GameProcessInfo.buffer;
+	for (size_t i = 0; i < count2; ++i) {
+		uint32_t td_offset = *(uint32_t*)(baseptr + Candidates[i].object_locator_offset);
+		if (!is_data_offset(td_offset)) continue;
+		const char* const name = (baseptr + td_offset + 16);
+		if (name[0] != '.') continue;
+		GameProcessInfo.rtti_map[std::string{name}] = Candidates[i].vtable_offset;
 	}
 
-	Log("rtti names found: %u", GameProcessInfo.rtti_map.size());
+#undef is_text_ptr
+#undef is_rdata_ptr
+#undef is_data_offset
 }
 
 
 extern uintptr_t find_vtable(const char* const rtti_name) {
-	Log("Locate: %s", rtti_name);
-
+	Log("find_vtable: %s", rtti_name);
 	const auto search = GameProcessInfo.rtti_map.find(std::string{ rtti_name });
 	if (search == GameProcessInfo.rtti_map.end()) return 0;
-	uintptr_t rtti_name_offset = search->second;
-
-	Log("Rtti name offset: %p", rtti_name_offset);
-	if (!rtti_name_offset) return 0;
-
-	rtti_name_offset -= 0x10; //backup 16 bytes to get base address
-	rtti_name_offset <<= 32; //shift up value to match how its stored (4 byte preceeded by padding)
-
-
-	const Pointer haystack{ GameProcessInfo.buffer };
-	const auto offset = GameProcessInfo.exe.rdata.offset;
-	uintptr_t object_locator_offset = offset;
-	while (find(haystack, haystack + GameProcessInfo.buffer_size, &object_locator_offset, rtti_name_offset)) {
-		if (*(haystack + object_locator_offset - 0x8).as<uint64_t*>() == 0x1ULL) {
-			object_locator_offset -= 8;
-			break;
-		}
-		object_locator_offset += 8;
-	}
-	Log("Object locator offset: %p", object_locator_offset);
-	if (!object_locator_offset) return 0;
-
-	uintptr_t object_locator_pointer = offset;
-	find(haystack, haystack + GameProcessInfo.buffer_size, &object_locator_pointer, GameProcessInfo.base_address + object_locator_offset);
-	Log("Object locator pointer: %p", object_locator_pointer);
-
-	uintptr_t vtable = (GameProcessInfo.base_address + object_locator_pointer + 0x8);
-	Log("vTable: %p", vtable);
-
-	return vtable;
+	auto ret = GameProcessInfo.base_address + search->second;
+	Log("Found: %p", (void*)ret);
+	return ret;
 }
 
 
-static DWORD WINAPI vtable_scan_threadproc(LPVOID) {
+extern void scan_vtable() {
 	results.clear();
 	results.reserve(16384); //more than enough for all game settings
 
@@ -192,7 +208,6 @@ static DWORD WINAPI vtable_scan_threadproc(LPVOID) {
 			offset += sizeof(GameSetting);
 		}
 	}
-	return 0;
 }
 
 
@@ -300,15 +315,6 @@ static void EditSetting(Setting& s) {
 	else ImGui::Text("(not currently editable)");
 }
 
-static bool StyleCollapsingHeader(const char* const name) {
-	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 0.f, 2.f });
-	auto ret = ImGui::CollapsingHeader(name);
-	ImGui::PopStyleVar();
-
-	return ret;
-}
-
-
 static void reset_changed_settings(void) {
 	for (auto& x : results) {
 		if (!(x.m_flags & GameSettingFlag::FlagChanged)) continue;
@@ -316,11 +322,6 @@ static void reset_changed_settings(void) {
 		x.m_current = x.m_setting.Active;
 		x.Update();
 	}
-}
-
-extern void scan_vtable(void) {
-        //CreateThread(NULL, 0, &vtable_scan_threadproc, nullptr, 0, NULL);
-        vtable_scan_threadproc(nullptr);
 }
 
 extern void scan_window_draw(void) {
@@ -466,7 +467,7 @@ extern void scan_window_draw(void) {
 		for (auto i = clip.DisplayStart; i < clip.DisplayEnd; ++i) {
 			auto& x = results[i];
 			ImGui::PushID(&x);
-			if (StyleCollapsingHeader(x.m_name.c_str())) {
+			if (ImGui::CollapsingHeader(x.m_name.c_str())) {
 				EditSetting(x);
 			}
 			ImGui::PopID();

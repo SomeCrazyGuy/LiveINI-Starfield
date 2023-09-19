@@ -43,8 +43,10 @@
     <ClCompile Include="font.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="rtti_window.cpp" />
     <ClCompile Include="aobscan.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rtti_window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -95,8 +97,10 @@
     <ClInclude Include="font.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="rtti_window.h" />
     <ClInclude Include="aobscan.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rtti_window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

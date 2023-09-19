@@ -72,7 +72,8 @@ static void ScanStarfield() {
 
         perform_exe_section_analysis();
         perform_exe_version_analysis();
-        build_rtti_list();
+        //build_rtti_list();
+        turbo_vtable_algorithm();
         scan_vtable();
 BAIL_OUT:
         ;
