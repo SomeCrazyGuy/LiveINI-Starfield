@@ -55,6 +55,9 @@
     <ClCompile Include="method_window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="heap_window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h">
@@ -113,6 +116,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="method_window.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="heap_window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

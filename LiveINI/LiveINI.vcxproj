@@ -92,6 +92,7 @@
     <ClCompile Include="aobscan.cpp" />
     <ClCompile Include="aob_window.cpp" />
     <ClCompile Include="font.cpp" />
+    <ClCompile Include="heap_window.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
     <ClCompile Include="imgui\imgui_demo.cpp" />
     <ClCompile Include="imgui\imgui_draw.cpp" />
@@ -112,6 +113,7 @@
     <ClInclude Include="aobscan.h" />
     <ClInclude Include="aob_window.h" />
     <ClInclude Include="font.h" />
+    <ClInclude Include="heap_window.h" />
     <ClInclude Include="imgui\imconfig.h" />
     <ClInclude Include="imgui\imgui.h" />
     <ClInclude Include="imgui\imgui_impl_dx11.h" />

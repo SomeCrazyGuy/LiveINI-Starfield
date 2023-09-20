@@ -5,6 +5,7 @@
 #include "rtti_window.h"
 #include "aob_window.h"
 #include "method_window.h"
+#include "heap_window.h"
 
 // Init global data
 extern ProcessInfo GameProcessInfo = { nullptr };
@@ -172,6 +173,10 @@ int WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
                                 }
                                 if (ImGui::BeginTabItem("Method")) {
                                         draw_method_window();
+                                        ImGui::EndTabItem();
+                                }
+                                if (ImGui::BeginTabItem("Heap")) {
+                                        draw_heap_window();
                                         ImGui::EndTabItem();
                                 }
                                 ImGui::EndTabBar();
