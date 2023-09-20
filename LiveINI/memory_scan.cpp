@@ -195,6 +195,7 @@ extern void scan_vtable() {
 		{find_vtable(".?AVRendererQualitySetting@CreationRenderer@@"), GameSettingFlag::OriginRendererQuality},
 		{find_vtable(".?AVRendererQualityPref@CreationRenderer@@"), GameSettingFlag::OriginRendererPref},
 		{find_vtable(".?AV?$SettingT@VGameSettingCollection@@@@"), GameSettingFlag::OriginGameSetting},
+		{find_vtable(".?AV?$SettingT@VRegSettingCollection@@@@"), GameSettingFlag::OriginRegSetting},
 		{0, GameSettingFlag::OriginUnknown},
 	};
 
@@ -418,6 +419,7 @@ extern void scan_window_draw(void) {
 		{ static bool b{true}; ImGui::Checkbox("RendererQuality", &b); if(b) include_mask |= GameSettingFlag::OriginRendererQuality; }
 		{ static bool b{true}; ImGui::Checkbox("RendererPref", &b); if(b) include_mask |= GameSettingFlag::OriginRendererPref; }
 		{ static bool b{true}; ImGui::Checkbox("GameSetting", &b); if(b) include_mask |= GameSettingFlag::OriginGameSetting; }
+		{ static bool b{true}; ImGui::Checkbox("RegSetting", &b); if(b) include_mask |= GameSettingFlag::OriginRegSetting; }
 		{ static bool b{true}; ImGui::Checkbox("Unknown", &b); if(b) include_mask |= GameSettingFlag::OriginUnknown; }
 		ImGui::Separator();
 		{ static bool b{true}; ImGui::Checkbox("Flag Changed", &b); if(b) include_mask |= GameSettingFlag::FlagChanged; }
@@ -440,6 +442,7 @@ extern void scan_window_draw(void) {
 		{ static bool b{ false }; ImGui::Checkbox("RendererQuality##exclude", &b); if (b) exclude_mask |= GameSettingFlag::OriginRendererQuality; }
 		{ static bool b{ false }; ImGui::Checkbox("RendererPref##exclude", &b); if (b) exclude_mask |= GameSettingFlag::OriginRendererPref; }
 		{ static bool b{ false }; ImGui::Checkbox("GameSetting##exclude", &b); if (b) exclude_mask |= GameSettingFlag::OriginGameSetting; }
+		{ static bool b{ false }; ImGui::Checkbox("RegSetting##exclude", &b); if (b) exclude_mask |= GameSettingFlag::OriginRegSetting; }
 		{ static bool b{ false }; ImGui::Checkbox("Unknown##exclude", &b); if (b) exclude_mask |= GameSettingFlag::OriginUnknown; }
 		ImGui::Separator();
 		{ static bool b{ false }; ImGui::Checkbox("Flag Changed##exclude", &b); if (b) exclude_mask |= GameSettingFlag::FlagChanged; }

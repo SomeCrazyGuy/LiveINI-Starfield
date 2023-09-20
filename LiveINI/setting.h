@@ -36,6 +36,7 @@ enum GameSettingFlag : uint64_t {
 	OriginRendererQuality   = 1 << 10,
 	OriginRendererPref	= 1 << 11,
 	OriginGameSetting	= 1 << 12,
+	OriginRegSetting	= 1 << 13,
 
 	FlagChanged = 1 << 13,
 };

@@ -33,6 +33,7 @@ const char* Setting::GetGameSettingOriginName(const uint64_t gso) {
 	if (gso & GameSettingFlag::OriginRendererQuality) return "RendererQuality";
 	if (gso & GameSettingFlag::OriginRendererPref) return "RendererPref";
 	if (gso & GameSettingFlag::OriginGameSetting) return "GameSetting";
+	if (gso & GameSettingFlag::OriginRegSetting) return "RegSetting";
 	if (gso & GameSettingFlag::OriginUnknown) return "Unknown";
 	return "(error)";
 }
