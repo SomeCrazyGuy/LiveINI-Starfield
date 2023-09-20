@@ -74,7 +74,10 @@ extern void aob_free(AOB_SIG sig) {
 
 
 extern unsigned aob_scan(const void* buffer, unsigned buffer_size, unsigned starting_offset, AOB_SIG sig) {
-        assert(starting_offset < buffer_size);
+        //assert(starting_offset < buffer_size);
+        if (starting_offset >= buffer_size) {
+                return AOB_NO_MATCH;
+        }
 
         const unsigned char* haystack = (const unsigned char*)buffer + starting_offset;
         const unsigned count = buffer_size - starting_offset;
