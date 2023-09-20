@@ -3,13 +3,12 @@
 
 
 struct Result {
-        const char* name; //rtti name
+        std::string name; //rtti name
         uint32_t method_number; //index into the array of methods on the vtable
-        uint32_t method_count; //count of methods in class
         uint32_t offset; //imagebase offset of vtable method
 };
 
-extern void draw_method_window() {
+void draw_method_window() {
         static char buffer[64];
         static std::vector<Result> Results{};
 
@@ -31,10 +30,19 @@ extern void draw_method_window() {
                         for (const auto& x : GameProcessInfo.rtti_map) {
                                 const uintptr_t* methods = (uintptr_t*)((char*)GameProcessInfo.buffer + x.second.vtable_offset);
 
-                                for (uint32_t i = 0; i < x.second.func_count; ++i) {
-                                        if (ptr == methods[i]) {
+                                uint32_t method_num = 0;
+                                while (is_text_ptr(methods[method_num])) {
+
+
+                                        if (ptr == methods[method_num]) {
                                                 Log("Found Method");
-                                                Results.push_back(Result{ x.second.name, i, x.second.func_count, x.second.vtable_offset + (i * 8) });
+                                                Results.push_back(Result{x.first, method_num, x.second.vtable_offset + (method_num * 8)});
+                                        }
+
+                                        ++method_num;
+
+                                        if (x.second.vtable_offset == 0x44DD370) {
+                                                Log("Testing Method %u (%p)", method_num, methods[method_num]);
                                         }
                                 }
                         }
@@ -51,9 +59,9 @@ extern void draw_method_window() {
                 for (int i = clip.DisplayStart; i < clip.DisplayEnd; ++i) {
                         ImGui::PushID(i);
                         const auto r = Results[i];
-                        if (ImGui::CollapsingHeader(r.name)) {
+                        if (ImGui::CollapsingHeader(r.name.c_str())) {
                                 char text[64];
-                                snprintf(text, sizeof(text), "Starfield.exe+0x%X (method %u of %u)", r.offset, r.method_number, r.method_count);
+                                snprintf(text, sizeof(text), "Starfield.exe+0x%X (method %u)", r.offset, r.method_number);
                                 ImGui::InputText("Info", text, sizeof(text), ImGuiInputTextFlags_ReadOnly);
                         }
                         ImGui::PopID();

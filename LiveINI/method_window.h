@@ -1,3 +1,3 @@
 #pragma once
 
-extern void draw_method_window();
+void draw_method_window();
