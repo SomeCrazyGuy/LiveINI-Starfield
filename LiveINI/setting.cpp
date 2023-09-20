@@ -30,7 +30,8 @@ const char* Setting::GetGameSettingTypeName(const uint64_t gst) {
 
 const char* Setting::GetGameSettingOriginName(const uint64_t gso) {
 	if (gso & GameSettingFlag::OriginINI) return "INI";
-	if (gso & GameSettingFlag::OriginINIPref) return "INIPref";
+	if (gso & GameSettingFlag::OriginRendererQuality) return "RendererQuality";
+	if (gso & GameSettingFlag::OriginRendererPref) return "RendererPref";
 	if (gso & GameSettingFlag::OriginGameSetting) return "GameSetting";
 	if (gso & GameSettingFlag::OriginUnknown) return "Unknown";
 	return "(error)";

@@ -192,7 +192,8 @@ extern void scan_vtable() {
 		GameSettingFlag origin;
 	} const settings_vtable[] = {
 		{find_vtable(".?AV?$SettingT@VINISettingCollection@@@@"), GameSettingFlag::OriginINI},
-		{find_vtable(".?AVRendererQualitySetting@CreationRenderer@@"), GameSettingFlag::OriginINIPref},
+		{find_vtable(".?AVRendererQualitySetting@CreationRenderer@@"), GameSettingFlag::OriginRendererQuality},
+		{find_vtable(".?AVRendererQualityPref@CreationRenderer@@"), GameSettingFlag::OriginRendererPref},
 		{find_vtable(".?AV?$SettingT@VGameSettingCollection@@@@"), GameSettingFlag::OriginGameSetting},
 		{0, GameSettingFlag::OriginUnknown},
 	};
@@ -413,10 +414,11 @@ extern void scan_window_draw(void) {
 		{ static bool b{true}; ImGui::Checkbox("Type Unknown", &b); if(b) include_mask |= GameSettingFlag::TypeUnknown; }
 		{ static bool b{true}; ImGui::Checkbox("Type Unsigned", &b); if(b) include_mask |= GameSettingFlag::TypeUnsigned; }
 		ImGui::Separator();
-		{ static bool b{true}; ImGui::Checkbox("Origin INI", &b); if(b) include_mask |= GameSettingFlag::OriginINI; }
-		{ static bool b{true}; ImGui::Checkbox("Origin INI Pref", &b); if(b) include_mask |= GameSettingFlag::OriginINIPref; }
-		{ static bool b{true}; ImGui::Checkbox("Origin GameSetting", &b); if(b) include_mask |= GameSettingFlag::OriginGameSetting; }
-		{ static bool b{true}; ImGui::Checkbox("Origin Unknown", &b); if(b) include_mask |= GameSettingFlag::OriginUnknown; }
+		{ static bool b{true}; ImGui::Checkbox("INI", &b); if(b) include_mask |= GameSettingFlag::OriginINI; }
+		{ static bool b{true}; ImGui::Checkbox("RendererQuality", &b); if(b) include_mask |= GameSettingFlag::OriginRendererQuality; }
+		{ static bool b{true}; ImGui::Checkbox("RendererPref", &b); if(b) include_mask |= GameSettingFlag::OriginRendererPref; }
+		{ static bool b{true}; ImGui::Checkbox("GameSetting", &b); if(b) include_mask |= GameSettingFlag::OriginGameSetting; }
+		{ static bool b{true}; ImGui::Checkbox("Unknown", &b); if(b) include_mask |= GameSettingFlag::OriginUnknown; }
 		ImGui::Separator();
 		{ static bool b{true}; ImGui::Checkbox("Flag Changed", &b); if(b) include_mask |= GameSettingFlag::FlagChanged; }
 
@@ -434,10 +436,11 @@ extern void scan_window_draw(void) {
 		{ static bool b{ false }; ImGui::Checkbox("Type Unknown##exclude", &b); if (b) exclude_mask |= GameSettingFlag::TypeUnknown; }
 		{ static bool b{ false }; ImGui::Checkbox("Type Unsigned##exclude", &b); if (b) exclude_mask |= GameSettingFlag::TypeUnsigned; }
 		ImGui::Separator();
-		{ static bool b{ false }; ImGui::Checkbox("Origin INI##exclude", &b); if (b) exclude_mask |= GameSettingFlag::OriginINI; }
-		{ static bool b{ false }; ImGui::Checkbox("Origin INI Pref##exclude", &b); if (b) exclude_mask |= GameSettingFlag::OriginINIPref; }
-		{ static bool b{ false }; ImGui::Checkbox("Origin GameSetting##exclude", &b); if (b) exclude_mask |= GameSettingFlag::OriginGameSetting; }
-		{ static bool b{ false }; ImGui::Checkbox("Origin Unknown##exclude", &b); if (b) exclude_mask |= GameSettingFlag::OriginUnknown; }
+		{ static bool b{ false }; ImGui::Checkbox("INI##exclude", &b); if (b) exclude_mask |= GameSettingFlag::OriginINI; }
+		{ static bool b{ false }; ImGui::Checkbox("RendererQuality##exclude", &b); if (b) exclude_mask |= GameSettingFlag::OriginRendererQuality; }
+		{ static bool b{ false }; ImGui::Checkbox("RendererPref##exclude", &b); if (b) exclude_mask |= GameSettingFlag::OriginRendererPref; }
+		{ static bool b{ false }; ImGui::Checkbox("GameSetting##exclude", &b); if (b) exclude_mask |= GameSettingFlag::OriginGameSetting; }
+		{ static bool b{ false }; ImGui::Checkbox("Unknown##exclude", &b); if (b) exclude_mask |= GameSettingFlag::OriginUnknown; }
 		ImGui::Separator();
 		{ static bool b{ false }; ImGui::Checkbox("Flag Changed##exclude", &b); if (b) exclude_mask |= GameSettingFlag::FlagChanged; }
 

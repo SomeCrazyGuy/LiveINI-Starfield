@@ -31,12 +31,13 @@ enum GameSettingFlag : uint64_t {
 	TypeRGBA     = 1 << 6,
 	TypeString   = 1 << 7,
 
-	OriginUnknown     = 1 << 8,
-	OriginINI         = 1 << 9,
-	OriginINIPref     = 1 << 10,
-	OriginGameSetting = 1 << 11,
+	OriginUnknown		= 1 << 8,
+	OriginINI		= 1 << 9,
+	OriginRendererQuality   = 1 << 10,
+	OriginRendererPref	= 1 << 11,
+	OriginGameSetting	= 1 << 12,
 
-	FlagChanged = 1 << 12,
+	FlagChanged = 1 << 13,
 };
 
 
