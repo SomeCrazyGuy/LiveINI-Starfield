@@ -188,22 +188,25 @@ extern void scan_vtable() {
 	const Pointer buffer(GameProcessInfo.buffer);
 
 	struct vtable_offsets {
-		uintptr_t offset;
+		const char* rtti_name;
 		GameSettingFlag origin;
 	} const settings_vtable[] = {
-		{find_vtable(".?AV?$SettingT@VINISettingCollection@@@@"), GameSettingFlag::OriginINI},
-		{find_vtable(".?AVRendererQualitySetting@CreationRenderer@@"), GameSettingFlag::OriginRendererQuality},
-		{find_vtable(".?AVRendererQualityPref@CreationRenderer@@"), GameSettingFlag::OriginRendererPref},
-		{find_vtable(".?AV?$SettingT@VGameSettingCollection@@@@"), GameSettingFlag::OriginGameSetting},
-		{find_vtable(".?AV?$SettingT@VRegSettingCollection@@@@"), GameSettingFlag::OriginRegSetting},
+		{".?AV?$SettingT@VINISettingCollection@@@@", GameSettingFlag::OriginINI},
+		{".?AVRendererQualitySetting@CreationRenderer@@", GameSettingFlag::OriginRendererQuality},
+		{".?AVRendererQualityPref@CreationRenderer@@", GameSettingFlag::OriginRendererPref},
+		{".?AV?$SettingT@VINIPrefSettingCollection@@@@", GameSettingFlag::OriginRendererPref},
+		{".?AV?$SettingT@VGameSettingCollection@@@@", GameSettingFlag::OriginGameSetting},
+		{".?AV?$SettingT@VRegSettingCollection@@@@", GameSettingFlag::OriginRegSetting},
 		{0, GameSettingFlag::OriginUnknown},
 	};
 
 	const auto start_offset = GameProcessInfo.exe.rdata.offset;
-	for (uint64_t vt = 0; settings_vtable[vt].offset; ++vt) {
+	for (uint64_t vt = 0; settings_vtable[vt].rtti_name; ++vt) {
 		uintptr_t offset = start_offset;
                 char tmp_name[128];
-		while (find(buffer, buffer + sz, &offset, settings_vtable[vt].offset)) {
+		uintptr_t instance_ptr = find_vtable(settings_vtable[vt].rtti_name);
+		if (!instance_ptr) continue;
+		while (find(buffer, buffer + sz, &offset, instance_ptr)) {
 			Setting s;
 			s.m_address = GameProcessInfo.base_address + offset;
 			s.m_setting = *(buffer + offset).as<const GameSetting*>();

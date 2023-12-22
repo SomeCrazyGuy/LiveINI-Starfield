@@ -9,8 +9,11 @@ void build_heap_list() {
         constexpr auto mbi_size = sizeof(mbi);
         constexpr auto min_heap_size = 120 * 1024 * 1024; //only consider heaps larger than 120MB
 
-
         Heaps.clear();
+
+        //add in the game static memory as a scanable heap
+        Heaps.push_back(GetProcessBlock());
+
         for (uintptr_t address = 0; VirtualQueryEx(GameProcessInfo.process, (LPCVOID)address, &mbi, mbi_size); address += mbi.RegionSize) {
                 if (!mbi.RegionSize) break;
                 if (mbi.State != MEM_COMMIT) continue;
