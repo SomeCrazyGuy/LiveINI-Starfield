@@ -210,14 +210,21 @@ extern void scan_vtable() {
 			Setting s;
 			s.m_address = GameProcessInfo.base_address + offset;
 			s.m_setting = *(buffer + offset).as<const GameSetting*>();
-			//s.m_name = ((Pointer(s.m_setting.Name) - GameProcessInfo.base_address) + buffer).as<const char*>();
                         
-                        if (!RPM(s.m_setting.Name, tmp_name, 128)) {
-                                continue;
-                        }
+			const auto name_addr = (uintptr_t)s.m_setting.Name;
 
-			tmp_name[127] = 0;
-                        s.m_name = tmp_name;
+			if ((name_addr - GameProcessInfo.base_address) < GameProcessInfo.buffer_size) {
+				//the name is in static memory, use that
+				s.m_name = (name_addr - GameProcessInfo.base_address) + (char*)GameProcessInfo.buffer;
+			}
+			else {
+				if (!RPM(s.m_setting.Name, tmp_name, 128)) {
+					continue;
+				}
+				tmp_name[127] = 0;
+				s.m_name = tmp_name;
+			}
+			
 			s.m_flags = settings_vtable[vt].origin | s.GetGameSettingType(s.m_name[0]);
 			for (const auto chr : s.m_name) {
 				s.m_search_name += (char)::tolower(chr);
@@ -513,7 +520,7 @@ extern void perform_exe_version_analysis() {
 	offset += 30; // L"ProductVersion" + wchar_t null terminator 
 	const char* buffer = (char*)GameProcessInfo.buffer;
 	auto& v = GameProcessInfo.exe.version;
-	auto ret = swscanf_s((wchar_t*) & buffer[offset], L"%u.%u.%u.%u", &v.major, &v.minor, &v.build, &v.revision);
+	auto ret = swscanf_s((wchar_t*) &buffer[offset], L"%u.%u.%u.%u", &v.major, &v.minor, &v.build, &v.revision);
 	assert(ret == 4);
 	Log("Game Version: %u.%u.%u.%u", v.major, v.minor, v.build, v.revision);
 }
