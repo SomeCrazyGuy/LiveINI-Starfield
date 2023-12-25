@@ -12,7 +12,7 @@ void build_heap_list() {
         Heaps.clear();
 
         //add in the game static memory as a scanable heap
-        Heaps.push_back(GetProcessBlock());
+        Heaps.push_back(GetProcessBlock(GameProcessInfo.process));
 
         for (uintptr_t address = 0; VirtualQueryEx(GameProcessInfo.process, (LPCVOID)address, &mbi, mbi_size); address += mbi.RegionSize) {
                 if (!mbi.RegionSize) break;

@@ -95,12 +95,12 @@ static uintptr_t GetProcessBaseAddress(HANDLE process) {
 	return 0;
 }
 
-extern MemoryBlock GetProcessBlock(void) {
+extern MemoryBlock GetProcessBlock(const HANDLE process_handle) {
 	MemoryBlock ret = {0};
-	HMODULE base = (HMODULE) GetProcessBaseAddress(GameProcessInfo.process);
+	HMODULE base = (HMODULE) GetProcessBaseAddress(process_handle);
 
 	MODULEINFO modinf;
-	if (GetModuleInformation(GameProcessInfo.process, base, &modinf, sizeof(modinf))) {
+	if (GetModuleInformation(process_handle, base, &modinf, sizeof(modinf))) {
 		ret.address = (uintptr_t)base;
 		ret.size = modinf.SizeOfImage;
 	}

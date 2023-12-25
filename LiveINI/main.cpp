@@ -24,8 +24,11 @@ void CleanupRenderTarget();
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 
-static void ScanStarfield() {
-        MemoryBlock mb;
+static bool ScanProcess(DWORD procid) {
+        if (!procid) {
+                Log("procid is 0, no process selected");
+                return false;
+        }
 
         if (GameProcessInfo.process) {
                 CloseHandle(GameProcessInfo.process);
@@ -33,53 +36,75 @@ static void ScanStarfield() {
                 GameProcessInfo.rtti_map.clear();
         }
 
-        auto proc = GetProcessIdByExeName("Starfield.exe");
+        Log("Scan Process ID: %u", procid);
 
-        if (!proc) {
-                proc = GetProcessIdByWindowTitle(L"Starfield");
-        }
-
-        if (!proc) {
-                Log("Starfield is not running");
-                goto BAIL_OUT;
-        }
-
-        GameProcessInfo.proc_id = proc;
-        Log("Process ID: %u", GameProcessInfo.proc_id);
-
-        GameProcessInfo.process = OpenProcess(PROCESS_ALL_ACCESS, FALSE, GameProcessInfo.proc_id);
-        if (!GameProcessInfo.process) {
+        const auto proc_handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, procid);
+        if (!proc_handle) {
                 Log("Could not open process");
-                goto BAIL_OUT;
+                return false;
         }
 
-        mb = GetProcessBlock();
+        const auto mb = GetProcessBlock(proc_handle);
         if (!mb.address) {
-                Log("Could not analyze process heap");
-                goto BAIL_OUT;
+                Log("Could not get process block!");
+                return false;
         }
 
-        GameProcessInfo.buffer_size = mb.size;
+        const auto buffer = _aligned_malloc((mb.size + 4095) & (~4095ULL), 4096);
+        if (!buffer) {
+                Log("Could not allocate memory for process buffer");
+                return false;
+        }
+
+        GameProcessInfo.proc_id = procid;
+        GameProcessInfo.process = proc_handle;
         GameProcessInfo.base_address = mb.address;
+        GameProcessInfo.buffer_size = mb.size;
+        GameProcessInfo.buffer = buffer;
 
-        GameProcessInfo.buffer = _aligned_malloc((mb.size | 4095) + 1, 4096);
-        if (!GameProcessInfo.buffer) {
-                Log("Could not allocate memory");
-                goto BAIL_OUT;
-        }
-
-        if (!RPM(mb.address, GameProcessInfo.buffer, mb.size)) {
+        if (!RPM(mb.address, buffer, mb.size)) {
                 Log("Could not read process memory");
-                goto BAIL_OUT;
+                return false;
         }
+        
+        return true;
+}
 
-        perform_exe_section_analysis();
-        perform_exe_version_analysis();
-        //build_rtti_list();
-        turbo_vtable_algorithm();
-        scan_vtable();
-BAIL_OUT:
-        ;
+static void ScanGame() {
+        static char target[64] = "Starfield";
+        static bool specify_target = false;
+
+        if (ImGui::Button("Scan Starfield")) {
+                if (ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
+                        specify_target = true;
+                }
+                else {
+
+                        char temp_name[64];
+                        snprintf(temp_name, sizeof(temp_name), "%s.exe", target);
+
+                        auto proc = GetProcessIdByExeName(temp_name);
+
+                        if (!proc) {
+                                proc = GetProcessIdByWindowTitle(L"Starfield");
+                        }
+
+                        // the operations below must be performed in this exact order
+                        // each operation builds more info about the exe and is used by the next operation
+                        if (ScanProcess(proc)) {
+                                perform_exe_section_analysis();
+                                perform_exe_version_analysis();
+                                turbo_vtable_algorithm();
+
+                                if (!ImGui::IsKeyDown(ImGuiKey_LeftCtrl)) {
+                                        scan_vtable();
+                                }
+                        }
+                }
+        }
+        if (specify_target) {
+                ImGui::InputText("Target", target, sizeof(target));
+        }
 }
 
 
@@ -152,9 +177,7 @@ int WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
                 if (ImGui::Begin("Window", nullptr, window_flags)) {
                         if (ImGui::BeginTabBar("main_tab_bar")) {
                                 if (ImGui::BeginTabItem("Log")) {
-                                        if (ImGui::Button("Scan Starfield")) {
-                                                ScanStarfield();
-                                        }
+                                        ScanGame();
                                         ImGui::SameLine();
                                         draw_log_window();
                                         ImGui::EndTabItem();
